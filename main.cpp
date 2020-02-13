@@ -5,31 +5,17 @@
 #include <vector>
 #include <cassert>
 FILE* fin, *fout, *flog;
-
 inline void maxer(int &x, int y) { if (y > x) x = y; }
-
 inline int min(int a, int b) { return a < b ? a : b; }
-
 inline int max(int a, int b) { return a > b ? a : b; }
-
-const double round_prob[19] = {1.000000, 1.000000, 0.999708, 0.998029, 0.991947, 0.976532, 0.946340, 0.897968, 0.831425,
-                               0.750198, 0.660036, 0.567684, 0.479381, 0.399071, 0.329266, 0.270215, 0.221551, 0.182120,
-                               0.00000};
-const long long C[5][5] = {{1},
-                           {1, 1},
-                           {1, 2, 1},
-                           {1, 3, 3, 1},
-                           {1, 4, 6, 4, 1}};
+const double round_prob[19] = {1.000000, 1.000000, 0.999708, 0.998029, 0.991947, 0.976532, 0.946340, 0.897968, 0.831425, 0.750198, 0.660036, 0.567684, 0.479381, 0.399071, 0.329266, 0.270215, 0.221551, 0.182120, 0.00000};
+const long long C[5][5] = {{1}, {1, 1}, {1, 2, 1}, {1, 3, 3, 1}, {1, 4, 6, 4, 1}};
 const char* mname[]={" 1W", " 2W", " 3W", " 4W", " 5W", " 6W", " 7W", " 8W", " 9W", " 1B", " 2B", " 3B", " 4B", " 5B", " 6B", " 7B", " 8B", " 9B", " 1T", " 2T", " 3T", " 4T", " 5T", " 6T", " 7T", " 8T", " 9T", "EST", "STH", "WST", "NTH", "BAI", " FA", "ZHO"};
-const int f_len3 = 15;
-const int MX = 16000;
+const int f_len3 = 15, MX = 16000,MAX_HU_VALUE = 6,CHILD_NUM = 10;
 unsigned long long f[16][2][f_len3][MX];
-const int MAX_HU_VALUE = 6;
-
+int dppath[MX][5][CHILD_NUM];
 double fact[136];
 int tot;
-const int CHILD_NUM = 10;
-int dppath[MX][5][CHILD_NUM];
 void seven(const int *hand_cnts, const int *known_remain_cnt,int p, int nw, int k){
 
     int double_cnt = 0;
@@ -174,14 +160,14 @@ void seven(const int *hand_cnts, const int *known_remain_cnt,int p, int nw, int 
 
 
 int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, int round) {
+    time_t start = clock();
     int hand_cnts[35];
     memcpy(hand_cnts, _hand_cnts, 35 * sizeof(int));
     int remaining_cards = 0;
     for (int i = 0; i < 34; ++i) remaining_cards += known_remain_cnt[i];
 
     int choice_num = 0;
-    int hand_choices[34];
-    memset(hand_choices, 0, sizeof(hand_choices));
+    int hand_choices[34]={};
     for (int temp = 0; temp < 34; ++temp) {
         if (hand_cnts[temp] > 0) hand_choices[choice_num++] = temp;
     }
@@ -192,6 +178,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             f[0][0][t][k] = 0;
     f[0][0][0][MAX_HU_VALUE + 1] = 1;
 
+    printf("init:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     //dp
     int branch_choice_num = 1;
     for (int i = 1; i <= 34; ++i) {
@@ -234,13 +221,16 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             }
         }
     }
+    printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     /*
     for (int p = 1; p < branch_choice_num; ++p) {
         int nw = 34 & 1;
         hand_cnts[hand_choices[p - 1]]--;
         seven(hand_cnts, known_remain_cnt, p, nw, 2);
         hand_cnts[hand_choices[p - 1]]++;
-    }*/
+    }
+    printf("seven:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+     */
     //+debug
     for (int p = 0; p < branch_choice_num; ++p) {
         fprintf(flog, "\n%3s,%d", p == 0 ? "   " : mname[hand_choices[p - 1]], p == 0 ? 0 : hand_cnts[hand_choices[p - 1]]);
@@ -266,6 +256,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             for (int j = 0; j < 34; ++j) { dora_count += dora[i]; }
             if (dora[card] >= hand_cnts[card]) dora_penalty = 1;
             if (card >= 27 && hand_cnts[card] <= 1) dora_penalty = 0;//don't save
+            dora_penalty = 0;
 
             //possibility of lasting to this round
             double prob =
@@ -353,9 +344,11 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             if(cnt < min_cnt || (cnt == min_cnt && hand_cnts[card] >= hand_cnt)) min_cnt = cnt, real_best_card = card, hand_cnt = hand_cnts[card];
         }
     }*/
+    printf("rest:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     return real_best_card;
 }
 int main() {
+    clock_t start = clock();
 
     fact[0] = 1;
     for (int i = 1; i <= 136; ++i) fact[i] = fact[i - 1] * i;
@@ -371,6 +364,7 @@ int main() {
         }
     }
     fclose(fdp);
+    printf("init0:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
 
     fin = fopen("input.txt", "r");
     fout = fopen("output.txt", "w");
@@ -380,7 +374,6 @@ int main() {
     struct tm * timeinfo;
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
-    printf ( "%s ", asctime (timeinfo) );
     fprintf(flog,"%s,\n", asctime (timeinfo) );
 
     int rest_num; fscanf(fin,"%d", &rest_num);
@@ -408,7 +401,9 @@ int main() {
     printf("\n");
 
     int round = 18 - rest_num / 4;//start with 69 -> 1.end with 0 - 18.
+    printf("init:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     int choice = decide(hand_cnt, known_remain_cnt,dora,round);
+    printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     fprintf(fout,"%d",choice);
     fprintf(flog,"%d ,",choice);
     fprintf(flog, "%3s\n", mname[choice]);
