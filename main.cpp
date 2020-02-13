@@ -222,7 +222,6 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
         }
     }
     printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
-    /*
     for (int p = 1; p < branch_choice_num; ++p) {
         int nw = 34 & 1;
         hand_cnts[hand_choices[p - 1]]--;
@@ -230,7 +229,6 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
         hand_cnts[hand_choices[p - 1]]++;
     }
     printf("seven:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
-     */
     //+debug
     for (int p = 0; p < branch_choice_num; ++p) {
         fprintf(flog, "\n%3s,%d", p == 0 ? "   " : mname[hand_choices[p - 1]], p == 0 ? 0 : hand_cnts[hand_choices[p - 1]]);
@@ -256,7 +254,6 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             for (int j = 0; j < 34; ++j) { dora_count += dora[i]; }
             if (dora[card] >= hand_cnts[card]) dora_penalty = 1;
             if (card >= 27 && hand_cnts[card] <= 1) dora_penalty = 0;//don't save
-            dora_penalty = 0;
 
             //possibility of lasting to this round
             double prob =
@@ -283,7 +280,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
     assert(choice_num == branch_choice_num - 1);
 
     //best expectance
-    int real_best_card = 0;
+    int real_best_card = 0; double real_suc = 0;
 
     double max_exp = -100, suc = 0;
     int best_card = 0;
@@ -331,11 +328,10 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
         printf("%3s\n", mname[best_card]);
         expectance[maxp] = 0;
         success[maxp] = 0;
-        if(l==1) real_best_card = best_card;
+        if(l==1) real_best_card = best_card, real_suc = suc;
     }
     //safe
-    /*
-    if(round >= 8 && suc < 0.01){
+    if(round >= 8 && real_suc < 0.01){
         printf("safe: ");
         int min_cnt = 5, hand_cnt = 0;
         for (int p = 1; p < branch_choice_num; ++p) {
@@ -343,8 +339,8 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             int cnt = hand_cnts[card] + known_remain_cnt[card];
             if(cnt < min_cnt || (cnt == min_cnt && hand_cnts[card] >= hand_cnt)) min_cnt = cnt, real_best_card = card, hand_cnt = hand_cnts[card];
         }
-    }*/
-    printf("rest:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    }
+    printf("res:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     return real_best_card;
 }
 int main() {
