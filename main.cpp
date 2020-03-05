@@ -178,7 +178,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             f[0][0][t][k] = 0;
     f[0][0][0][MAX_HU_VALUE + 1] = 1;
 
-    printf("init:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+ //   printf("\tinit:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     //dp
     int branch_choice_num = 1;
     for (int i = 1; i <= 34; ++i) {
@@ -221,14 +221,14 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             }
         }
     }
-    printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    printf("\tcalc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     for (int p = 1; p < branch_choice_num; ++p) {
         int nw = 34 & 1;
         hand_cnts[hand_choices[p - 1]]--;
         seven(hand_cnts, known_remain_cnt, p, nw, 2);
         hand_cnts[hand_choices[p - 1]]++;
     }
-    printf("seven:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    printf("\tseven:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     //+debug
     for (int p = 0; p < branch_choice_num; ++p) {
         fprintf(flog, "\n%3s,%d", p == 0 ? "   " : mname[hand_choices[p - 1]], p == 0 ? 0 : hand_cnts[hand_choices[p - 1]]);
@@ -328,7 +328,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
         printf("%3s\n", mname[best_card]);
         expectance[maxp] = 0;
         success[maxp] = 0;
-        if(l==1) real_best_card = best_card, real_suc = suc;
+        if(l==1) {real_best_card = best_card, real_suc = suc;break;}
     }
     //safe
     if(round >= 8 && real_suc < 0.01){
@@ -340,7 +340,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
             if(cnt < min_cnt || (cnt == min_cnt && hand_cnts[card] >= hand_cnt)) min_cnt = cnt, real_best_card = card, hand_cnt = hand_cnts[card];
         }
     }
-    printf("res:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    //printf("\tres:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     return real_best_card;
 }
 int main() {
@@ -397,13 +397,13 @@ int main() {
     printf("\n");
 
     int round = 18 - rest_num / 4;//start with 69 -> 1.end with 0 - 18.
-    printf("init:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    //printf("init:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     int choice = decide(hand_cnt, known_remain_cnt,dora,round);
-    printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
+    //printf("calc:%lf ms\n",(double)(clock()-start)*1000/CLOCKS_PER_SEC); start=clock();
     fprintf(fout,"%d",choice);
     fprintf(flog,"%d ,",choice);
     fprintf(flog, "%3s\n", mname[choice]);
-    printf("%3s\n", mname[choice]);
+    //printf("%3s\n", mname[choice]);
     fclose(fout);
     fclose(flog);
 
