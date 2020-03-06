@@ -337,6 +337,7 @@ int decide(const int *_hand_cnts, const int *known_remain_cnt, const int *dora, 
         for (int p = 1; p < branch_choice_num; ++p) {
             int card = hand_choices[p - 1];
             int cnt = hand_cnts[card] + known_remain_cnt[card];
+            if (card >= 27 && cnt != 4) cnt -= 1;
             if(cnt < min_cnt || (cnt == min_cnt && hand_cnts[card] >= hand_cnt)) min_cnt = cnt, real_best_card = card, hand_cnt = hand_cnts[card];
         }
     }
